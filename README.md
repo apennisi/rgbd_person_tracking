@@ -102,21 +102,24 @@ The same assumption is considered for all the points above the 2m of height (bas
 that a person is tall less then 2 meters). All the glass walls are excluded by analyzing the edges of
 the shape made of the points considered as ground. In fact, we project all such points in a top view
 frame in order to detect the left and right edges of the ground and to exclude all the points outside the
-left and right boundaries (see Fig. 3.2a and 3.2b). Then, the remaining points are grouped by using
+left and right boundaries.
+![Alt text](images/top_view.png "The 3D Segmentation: a. Depth, b. Top View, and c. Segmentation where the red color
+represents the considered blob and the blue color represents the ground.")
+Then, the remaining points are grouped by using
 a clustering method based on the Euclidean distance. From each cluster, we extract the top left and
-the bottom right point and by using the inverse of the roto-translation matrix R −1 , we convert those
-points in 2D image points in order to compute a bounding box around the candidate to be a person
-(see Fig. 3.2c).
+the bottom right point and by using the inverse of the roto-translation matrix R^−1 , we convert those
+points in 2D image points in order to compute a bounding box around the candidate to be a person.
 To recognize if a candidate is a person, we use a different approach with respect to the HOG
 detector used for the fixed camera system. The approach is based on the Aggregate Feature Channels
-(ACF) [4]. The ACF method computes the same features as in the Integral Channel Features (ICF)
-[6], where given an image, the features are computed as single channels. In particular, the number of
+(ACF). The ACF method computes the same features as in the Integral Channel Features (ICF), where given an image,the features are
+computed as single channels. In particular, the number of
 channels is equal to 10: 3 for the color components L, U, and V ( assuming the LUV color space),
 6 for computing the HOG features (each channel represents a different gradient orientation) and, 1
 channel for the gradient magnitude. This kind of features is integrated in a detector called The Fastest
-Pedestrian Detector in the West (FPDW) [5]. The FPDW analyses the features at different scales by
+Pedestrian Detector in the West (FPDW). The FPDW analyses the features at different scales by
 approximating them at nearby scales. Such a strategy increases the detector speed maintaining robust
-detection performance (see Fig. 3.3a).
+detection performance.
+![Alt text](images/detection_tracking.png "a. Detection: the green bounding boxes are the candidates, while the green bounding boxes are the detections. c. Tracking.")
 Finally, a multiple person tracker is used for tracking the detections. The main idea behind the
 tracker is to use the appearance model of the detections together with a nearest neighbor approach
 for data association. The appearance is given by using the RGB color information with the Speed Up
@@ -126,5 +129,5 @@ sample, and all the other detections together with 10 random patches, chosen ove
 without considering the patch of the image containing the detection, are used as negative samples.
 Then, a Kalman filter is used for filtering the noise of each track. A track is assigned to the current
 detection if, from the set of classifiers and Kalman filters, the response of one classifier is greater than
-a certain threshold c, or if the euclidean distance between the past track position and the current
-position is less then a threshold e (see Fig. 3.3b).
+a certain threshold _c_, or if the euclidean distance between the past track position and the current
+position is less then a threshold _e_.
