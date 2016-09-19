@@ -123,7 +123,7 @@ detection performance.
 Finally, a multiple person tracker is used for tracking the detections. The main idea behind the
 tracker is to use the appearance model of the detections together with a nearest neighbor approach
 for data association. The appearance is given by using the RGB color information with the Speed Up
-Robust Features (SURF) [2]. The extracted information is reduced by using a sparse dictionary. Then,
+Robust Features (SURF). The extracted information is reduced by using a sparse dictionary. Then,
 an on-line Adaboost classifier is assigned to each dictionary. The classifier is trained with one positive
 sample, and all the other detections together with 10 random patches, chosen over the entire image
 without considering the patch of the image containing the detection, are used as negative samples.
