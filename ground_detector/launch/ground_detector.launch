@@ -1,0 +1,21 @@
+<launch>
+		<arg name="prefix" value="/top_camera" />
+		<node name="ground_detector" pkg="ground_detector" type="ground_detector_node" output="screen">
+			<param name="_theta" value="12"/> <!-- xtion tilt angle -->
+			<param name="_ty" value="1.5"/> <!-- xtion y traslation -->
+			<param name="_debug" value="true"/> <!-- show the segmentation output -->
+			<param name="_groundThreshold" value="0.05" /> <!-- under this threshold is considered ground --> 
+			<param name="_voxel_size" value="0.06" /> <!-- voxel size -->
+			<param name="_min_height" value="1.0" /> <!-- min blob height -->
+			<param name="_max_height" value="2.0" /> <!-- max blob height -->
+			<param name="_min_head_distance" value="0.3" /> <!-- min distance between two heads -->
+			<param name="_sampling_factor" value="3" /> <!-- sampling cloud factor -->
+			<param name="_apply_denoising" value="false" /> 
+			<param name="_mean_k_denoising" value="5" /> <!-- meanK for denoising (the higher it is, the stronger is the filtering) -->
+			<param name="_std_dev_denoising" value="0.3" /> <!-- standard deviation for denoising (the lower it is, the stronger is the filtering) -->
+			<param name="_max_distance" value="5" /> <!-- detection rate in meters -->
+			<param name="_depth_topic" value="$(arg prefix)/depth/image_raw" />
+			<param name="_camera_info_topic" value="$(arg prefix)/depth/camera_info" />
+			<param name="_rgb_topic" value="$(arg prefix)/rgb/image_raw" />			
+		</node>
+</launch>
