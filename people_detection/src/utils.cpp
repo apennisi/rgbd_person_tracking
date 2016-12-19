@@ -1,33 +1,32 @@
 /*
- *  RGBD Persom Tracker
- *  Copyright 2016 Andrea Pennisi
+ *  The FASTEST PEDESTRIAN DETECTOR IN THE WEST (FPDW)
+ *  Copyright 2015 Andrea Pennisi
  *
  *  This file is part of AT and it is distributed under the terms of the
  *  GNU Lesser General Public License (Lesser GPL)
  *
  *
  *
- *  AT is free software: you can redistribute it and/or modify
+ *  FPDW is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  AT is distributed in the hope that it will be useful,
+ *  FPDW is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
  *
  *  You should have received a copy of the GNU Lesser General Public License
- *  along with AT.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with FPDW.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
- *  AT has been written by Andrea Pennisi
+ *  FPDW has been written by Andrea Pennisi
  *
  *  Please, report suggestions/comments/bugs to
  *  andrea.pennisi@gmail.com
  *
  */
-
 
 
 #include "utils.h"
@@ -184,7 +183,7 @@ void Convolution::convTri1(cv::Mat &_img, const int &_smooth, cv::Mat &_output)
     int d = _img.channels();
     cv::Size sz = _img.size();
 
-    float *O = (float*) malloc(sz.width*sz.height*d*sizeof(float));
+    float *O = (float*) calloc(sz.width*sz.height*d, sizeof(float));
     convConst(float_image.ptr<float>(0), O, r, s, d, sz);
 
     if(d == 1)
@@ -210,7 +209,7 @@ void Convolution::convTri(cv::Mat &_img, const int &_r, cv::Mat &_output)
     int d = _img.channels();
     cv::Size sz = _img.size();
     cv::Mat float_image = _img.t();
-    float *O = (float*) malloc(sz.width*sz.height*d*sizeof(float));
+    float *O = (float*) calloc(sz.width*sz.height*d, sizeof(float));
     convTri(float_image.ptr<float>(0), O, sz.height, sz.width, d, r, s);
 
     if(d == 1)
@@ -239,7 +238,7 @@ void RgbConvertion::process(const cv::Mat &_img, const structs::ColorSpace &_col
 
     float *ptr = float_image.ptr<float>(0);
 
-    float *J;
+    float *J=nullptr;
     if(_color == structs::ColorSpace::FPDW_ORIG)
     {
         if(_img.type() == CV_32FC3)
@@ -248,13 +247,13 @@ void RgbConvertion::process(const cv::Mat &_img, const structs::ColorSpace &_col
         }
         else
         {
-            J = (float*) malloc((_img.size().area() * _img.channels())*sizeof(float));
+            J = (float*) calloc((_img.size().area() * _img.channels()), sizeof(float));
             normalize(ptr, J, _img.size().area(), 1./255.);
         }
     }
     else if(_color == structs::ColorSpace::FPDW_LUV)
     {
-        J = (float*) malloc((_img.size().area() * _img.channels())*sizeof(float));
+        J = (float*) calloc((_img.size().area() * _img.channels()), sizeof(float));
         int d = _img.channels();
         for(unsigned i=0; i<d/3; i++)
         {
@@ -264,7 +263,8 @@ void RgbConvertion::process(const cv::Mat &_img, const structs::ColorSpace &_col
 
     _output = matToCvMat3x(J, _img.size());
 
-    free(J);
+    if(J)
+    {free(J);}
 }
 
 void RgbConvertion::rgb2luv_setup(float z, float *mr, float *mg, float *mb, float &minu, float &minv, float &un, float &vn, float *lTable)
@@ -279,6 +279,7 @@ void RgbConvertion::rgb2luv_setup(float z, float *mr, float *mg, float *mb, floa
     float maxi=(float) 1.0/270; minu=-88*maxi; minv=-134*maxi;
     // build (padded) lookup table for y->l conversion assuming y in [0,1]
     float y, l;
+    //#pragma omp parallel for num_threads( omp_get_num_procs() * omp_get_num_threads() ) shared(lTable) private(y, l)
     for(int i=0; i<1025; i++)
     {
         y = (float) (i/1024.0);
@@ -286,6 +287,7 @@ void RgbConvertion::rgb2luv_setup(float z, float *mr, float *mg, float *mb, floa
         lTable[i] = l*maxi;
     }
 
+    //#pragma omp parallel for num_threads( omp_get_num_procs() * omp_get_num_threads() ) shared(lTable)
     for(int i=1025; i<1064; i++)
     {
         lTable[i]=lTable[i-1];
@@ -335,6 +337,7 @@ void RgbConvertion::rgb2luv_sse(float *I, float *J, int n, float nrm)
         if(n1>n) n1=n;
         float *J1=J+i;
         float *R1, *G1, *B1;
+        // convert to floats (and load input into cache)
         if( typeid(float) != typeid(float) )
         {
             R1=R; G1=G; B1=B; float *Ri=I+i, *Gi=Ri+n, *Bi=Gi+n;
@@ -433,10 +436,10 @@ void GradientMag::gradMag(const cv::Mat &_img,
     }
 
     float *M, *O = 0;
-    M = (float*) malloc(w*h*sizeof(float));
+    M = (float*) calloc(w*h, sizeof(float));
     if(_out == 2)
     {
-        O = (float*) malloc(w*h*sizeof(float));
+        O = (float*) calloc(w*h, sizeof(float));
     }
 
     gradMag(ptr, M, O, h, w, d, int(p.full) > 0, acost);
@@ -478,27 +481,33 @@ cv::Mat GradientMag::gradientHist(const cv::Mat &_img, const cv::Mat &_s, const 
     int hb = h/_binSize;
     int wb = w/_binSize;
     int nChns = (useHog == 0) ? _p.nOrients : ( useHog == 1 ? _p.nOrients*4 : _p.nOrients*3+5 );
-    float *H = (float *) calloc(wb*hb*nChns, sizeof(float));
-    if(_p.nOrients == 0) return cv::Mat();
+    if(_p.nOrients != 0)
+    {
+        float *H = (float *) calloc(wb*hb*nChns, sizeof(float));
 
-    if(useHog == 0)
-    {
-        gradHist(M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, _full);
-    }
-    else if(useHog == 1)
-    {
-        hog( M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, _full, clipHog );
+        if(useHog == 0)
+        {
+            gradHist(M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, _full);
+        }
+        else if(useHog == 1)
+        {
+            hog( M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, _full, clipHog );
+        }
+        else
+        {
+            fhog( M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, clipHog );
+        }
+
+        cv::Mat out = matToCvMat6x(H, cv::Size(wb,hb));
+
+        free(H);
+
+        return out;
     }
     else
     {
-        fhog( M, S, H, h, w, _binSize, _p.nOrients, _p.softBin, clipHog );
+        return cv::Mat();
     }
-
-    cv::Mat out = matToCvMat6x(H, cv::Size(wb,hb));
-
-    free(H);
-
-    return out;
 }
 
 void GradientMag::gradHist(float *M, float *O, float *H, int h, int w, int bin, int nOrients, int softBin, bool full)
