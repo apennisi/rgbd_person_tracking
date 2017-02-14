@@ -86,19 +86,19 @@ RGPT is divided in three steps:
 * People Detection
 * People Tracking
 
-A general scheme of the module of the 3D person detection and tracking framework 1 , is showed in the following 
+A general scheme of the modules of the 3D person detection and tracking framework is showed in the following 
 figure:
 ![Alt text](images/scheme.png "The 3D Person Detection and Tracking module is based on 3 main steps: 1. 3D Segmen-tation, 2. Person Detection, and 3. Tracking.")
-which is made of three main steps: (i) scene segmentation, (ii) person detection, and (iii) person
+The framework is made of three main steps: (i) scene segmentation, (ii) person detection, and (iii) person
 tracking. Thanks to the RGB-D camera (i.e. Asus Xtion) mounted on the top of the robot, we are
-able to segment the scene and excluding the part of the image that is not useful for the task of person
+able to segment the scene and exclude the part of the image that is not useful for the task of person
 detection. By knowing the position of the camera and the tilt angle, we compute a roto-translation
 matrix R in order to rotate and translate the depth provided by the camera in order to straighten the
-scene. All the common state-of-the-art techniques used for finding the ground and the walls in the
-shopping mall environment, cannot be used due to the glasses of the shops as well as the movements
+scene. All the common state-of-the-art techniques for finding the ground and the walls in the
+shopping mall environment cannot be used due to the glasses of the shops as well as the movements
 of the mobile platform. So, by straightening the scene we can assume to exclude from the depth all
 the points under a threshold of 5cm and to consider them as belonging to the ground.
-The same assumption is considered for all the points above the 2m of height (basically, we assume
+The same assumption is considered for all the points above 2m of height (basically, we assume
 that a person is tall less then 2 meters). All the glass walls are excluded by analyzing the edges of
 the shape made of the points considered as ground. In fact, we project all such points in a top view
 frame in order to detect the left and right edges of the ground and to exclude all the points outside the
@@ -107,10 +107,9 @@ left and right boundaries.
 represents the considered blob and the blue color represents the ground.")
 Then, the remaining points are grouped by using
 a clustering method based on the Euclidean distance. From each cluster, we extract the top left and
-the bottom right point and by using the inverse of the roto-translation matrix R^−1 , we convert those
-points in 2D image points in order to compute a bounding box around the candidate to be a person.
-To recognize if a candidate is a person, we use a different approach with respect to the HOG
-detector used for the fixed camera system. The approach is based on the Aggregate Feature Channels
+the bottom right points and by using the inverse of the roto-translation matrix R^−1 , we convert those
+points in 2D image points obtaining then a bounding box around the candidate to be a person.
+To recognize if a candidate is a person, we use an approach based on the Aggregate Feature Channels
 (ACF). The ACF method computes the same features as in the Integral Channel Features (ICF), where given an image,the features are
 computed as single channels. In particular, the number of
 channels is equal to 10: 3 for the color components L, U, and V ( assuming the LUV color space),
@@ -125,9 +124,9 @@ tracker is to use the appearance model of the detections together with a nearest
 for data association. The appearance is given by using the RGB color information with the Speed Up
 Robust Features (SURF). The extracted information is reduced by using a sparse dictionary. Then,
 an on-line Adaboost classifier is assigned to each dictionary. The classifier is trained with one positive
-sample, and all the other detections together with 10 random patches, chosen over the entire image
+sample, and all the other detections together with 10 random patches chosen over the entire image
 without considering the patch of the image containing the detection, are used as negative samples.
 Then, a Kalman filter is used for filtering the noise of each track. A track is assigned to the current
-detection if, from the set of classifiers and Kalman filters, the response of one classifier is greater than
+detection if, from the set of classifiers and Kalman filters, the confidence of one classifier is greater than
 a certain threshold _c_, or if the euclidean distance between the past track position and the current
 position is less then a threshold _e_.
