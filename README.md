@@ -1,4 +1,4 @@
-# R-GBD Persond Tracking
+# R-GBD Person Tracking
 R-GBD Person Tracking (RGPT) is a ROS framework for detecting and tracking people from a mobile robot.
 
 ## Requirements
